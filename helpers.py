@@ -7,8 +7,8 @@ CURRENT_PATH = pathlib.Path(__file__).absolute().parent
 DATA_PATH = CURRENT_PATH / 'data'
 GRAPH_PATH = CURRENT_PATH / 'graphs'
 
-ECOSYSTEMS = [p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()]
-DATE_RANGE = pandas.date_range('2011-01-01', '2016-09-01', freq='6MS')
+ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
+DATE_RANGE = pandas.date_range('2011-01-01', '2016-09-01', freq='QS')
 
 
 def clean_data(packages, dependencies):
@@ -19,13 +19,7 @@ def clean_data(packages, dependencies):
     )
     
     # Filter unknown dependencies
-    dependencies = dependencies.merge(
-        packages[['package']],
-        how='inner',
-        left_on='dependency',
-        right_on='package',
-        suffixes=('', '_y')
-    ).drop('package_y', axis=1)
+    dependencies = dependencies[dependencies['dependency'].isin(packages['package'])]
     
     return packages, dependencies
     
@@ -69,6 +63,7 @@ def create_graph(packages, dependencies):
     graph.add_edges(
         [(row.package, row.dependency) for row in dependencies[['package', 'dependency']].itertuples()]
     )
+    graph.es['constraint'] = (v for v in dependencies['constraint'])
     
     return graph
 
@@ -100,11 +95,11 @@ if __name__ == '__main__':
         packages, dependencies = load_data(ecosystem)
         
         for date in DATE_RANGE:
-            print(' - ', date)
+            print('-', date, end=': ')
             
             filepath = (GRAPH_PATH / ecosystem / date.strftime('%Y-%m-%d.graphml.gz'))
             graph = create_graph(*create_snapshot(packages, dependencies, date))
-            
+            print('{} vertices and {} edges'.format(len(graph.vs), len(graph.es)))
             try:
                 (GRAPH_PATH / ecosystem).mkdir()
             except FileExistsError as e: 
