@@ -12,6 +12,9 @@ DATE_RANGE = pandas.date_range('2011-01-01', '2016-09-01', freq='QS')
 
 
 def clean_data(packages, dependencies):
+    # Filter releases with invalide date
+    packages = packages[packages['time'] >= pandas.to_datetime('1980-01-01')]
+
     # Filter unknown package/version
     dependencies = dependencies.merge(
         packages[['package', 'version']],
