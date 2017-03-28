@@ -1,6 +1,10 @@
+import collections
 import pathlib
-import pandas
+
 import igraph
+import pandas
+import statsmodels.api as sm
+
 
 CURRENT_PATH = pathlib.Path(__file__).absolute().parent
 
@@ -50,8 +54,7 @@ def load_data(ecosystem):
 
 def create_snapshot(packages, dependencies, date):
     """
-    Return a pair (packages, dependencies) that corresponds to the state
-    of the ecosystem at given date. 
+    Return a pair (packages, dependencies) that corresponds to the state of the ecosystem at given date.
     """
     packages = (
         packages[packages['time'] <= pandas.to_datetime(date)]
@@ -70,9 +73,9 @@ def create_snapshot(packages, dependencies, date):
 
 def create_graph(packages, dependencies):
     """
-    Create and enrich a dependency graph. 
-    The enrichment adds 'time', 'version', 'in', 'out', 'tr-in', 'tr-out' 
-    to the nodes, and 'constraint' to the edges.
+    Create and enrich a dependency graph.
+    
+    The enrichment adds 'time', 'version', 'in', 'out', 'tr-in', 'tr-out' to the nodes, and 'constraint' to the edges.
     """
     graph = igraph.Graph(directed=True)
     
@@ -96,6 +99,7 @@ def create_graph(packages, dependencies):
 def load_graph(ecosystem, date, force=False):
     """
     Load or construct a dependency graph for the ecosystem at given date.
+    
     Set 'force' to True to bypass caching.
     """
     filename = pandas.to_datetime(date).strftime('%Y-%m-%d.graphml.gz')
@@ -110,12 +114,51 @@ def load_graph(ecosystem, date, force=False):
         try:
             (GRAPH_PATH / ecosystem).mkdir()
         except FileExistsError as e:
-            pass 
+            pass
         graph.write_graphmlz(filepath.as_posix())
         
         return graph
     else:
         return igraph.read(filepath.as_posix(), format='graphmlz')
+
+
+def evolution_regression(df, xlog=False, ylog=False, return_raw=False):
+    """
+    Return R² value for df.index] ~ a.df[x] + b for all column x in given dataframe.
+    
+    If 'return_raw' is True, return the resulting OLS object instead of its R².
+    The results are returned through a dict which associates to each column  the result of the regression.
+    """
+    results = collections.OrderedDict()
+    
+    time = pandas.Series(df.index)
+    X = 1 + (time - time.min()).dt.days
+    X = pandas.np.log10(X) if xlog else X
+    X = sm.add_constant(X, prepend=False)
+    
+    for column in df.columns:
+        y = df[column] if not ylog else pandas.np.log10(df[column])
+        y = y.reset_index(drop=True)
+        
+        result = sm.OLS(y, X).fit()
+        
+        results[column] = result if return_raw else result.rsquared
+        
+    return results
+
+
+def evolution_linlog_regressions(df, return_raw=False):
+    """
+    Return the results of multiple regressions (lin/log).
+    """
+    data = pandas.DataFrame(columns=df.columns)
+    
+    data.loc['lin-lin', :] = evolution_regression(df, return_raw=return_raw)
+    data.loc['lin-log', :] = evolution_regression(df, ylog=True, return_raw=return_raw)
+    data.loc['log-lin', :] = evolution_regression(df, xlog=True, return_raw=return_raw)
+    data.loc['log-log', :] = evolution_regression(df, xlog=True, ylog=True, return_raw=return_raw)
+    
+    return data
 
 
 if __name__ == '__main__':
