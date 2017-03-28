@@ -12,6 +12,9 @@ DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
 
 
 def clean_data(packages, dependencies):
+    """
+    Remove invalid or unknown packages and dependencies.
+    """
     # Filter releases with invalide date
     packages = packages[packages['time'] >= pandas.to_datetime('1980-01-01')]
 
@@ -28,6 +31,9 @@ def clean_data(packages, dependencies):
     
     
 def load_data(ecosystem):
+    """
+    Return a pair (packages, dependencies) of dataframes for the given ecosystem.
+    """
     # Load data files
     packages = pandas.read_csv(
         (DATA_PATH / ecosystem / 'packages.csv.gz').as_posix(),
@@ -43,6 +49,10 @@ def load_data(ecosystem):
 
 
 def create_snapshot(packages, dependencies, date):
+    """
+    Return a pair (packages, dependencies) that corresponds to the state
+    of the ecosystem at given date. 
+    """
     packages = (
         packages[packages['time'] <= pandas.to_datetime(date)]
         .sort_values('time')
@@ -59,6 +69,11 @@ def create_snapshot(packages, dependencies, date):
 
 
 def create_graph(packages, dependencies):
+    """
+    Create and enrich a dependency graph. 
+    The enrichment adds 'time', 'version', 'in', 'out', 'tr-in', 'tr-out' 
+    to the nodes, and 'constraint' to the edges.
+    """
     graph = igraph.Graph(directed=True)
     
     graph.add_vertices(v for v in packages['package'])
@@ -79,6 +94,10 @@ def create_graph(packages, dependencies):
 
 
 def load_graph(ecosystem, date, force=False):
+    """
+    Load or construct a dependency graph for the ecosystem at given date.
+    Set 'force' to True to bypass caching.
+    """
     filename = pandas.to_datetime(date).strftime('%Y-%m-%d.graphml.gz')
     filepath = (GRAPH_PATH / ecosystem / filename)
     
