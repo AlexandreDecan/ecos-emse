@@ -8,7 +8,7 @@ DATA_PATH = CURRENT_PATH / 'data'
 GRAPH_PATH = CURRENT_PATH / 'graphs'
 
 ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
-DATE_RANGE = pandas.date_range('2011-01-01', '2016-09-01', freq='QS')
+DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
 
 
 def clean_data(packages, dependencies):
@@ -60,13 +60,20 @@ def create_snapshot(packages, dependencies, date):
 
 def create_graph(packages, dependencies):
     graph = igraph.Graph(directed=True)
+    
     graph.add_vertices(v for v in packages['package'])
     graph.vs['time'] = (v for v in packages['time'])
     graph.vs['version'] = (v for v in packages['version'])
+    
     graph.add_edges(
         [(row.package, row.dependency) for row in dependencies[['package', 'dependency']].itertuples()]
     )
     graph.es['constraint'] = (v for v in dependencies['constraint'])
+    
+    graph.vs['in'] = graph.indegree()
+    graph.vs['out'] = graph.outdegree()
+    graph.vs['tr-in'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)
+    graph.vs['tr-out'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)
     
     return graph
 
