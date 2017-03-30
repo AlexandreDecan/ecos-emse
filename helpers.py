@@ -79,7 +79,7 @@ def create_graph(packages, dependencies):
     """
     graph = igraph.Graph(directed=True)
     
-    graph.add_vertices(v for v in packages['package'])
+    graph.add_vertices(str(v) for v in packages['package'])
     graph.vs['time'] = (v for v in packages['time'])
     graph.vs['version'] = (v for v in packages['version'])
     
