@@ -17,6 +17,10 @@ DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
 # RE_SEMVER = r'(\d+)\.(\d+)(?:\.(\d+))?'
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>.+)$'
 
+RE_SOFT_CONSTRAINT = r'http|\^|~|>|<|\*|\.x'
+RE_LOWER_CONSTRAINT = r'\^|~|>|\.\*|\.x'
+RE_UPPER_CONSTRAINT = r'\^|~|<|\.\*|\.x'
+
 
 def clean_data(packages, dependencies):
     """
