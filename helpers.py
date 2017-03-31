@@ -87,13 +87,13 @@ def create_graph(packages, dependencies):
     graph = igraph.Graph(directed=True)
     
     graph.add_vertices(str(v) for v in packages['package'])
-    graph.vs['time'] = (v for v in packages['time'])
-    graph.vs['version'] = (v for v in packages['version'])
+    graph.vs['time'] = [v for v in packages['time']]
+    graph.vs['version'] = [v for v in packages['version']]
     
     graph.add_edges(
         [(row.package, row.dependency) for row in dependencies[['package', 'dependency']].itertuples()]
     )
-    graph.es['constraint'] = (v for v in dependencies['constraint'])
+    graph.es['constraint'] = [v for v in dependencies['constraint']]
     
     graph.vs['in'] = graph.indegree()
     graph.vs['out'] = graph.outdegree()
