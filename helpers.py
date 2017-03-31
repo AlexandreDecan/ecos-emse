@@ -15,7 +15,7 @@ ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
 DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
 
 # RE_SEMVER = r'(\d+)\.(\d+)(?:\.(\d+))?'
-RE_SEMVER = r'(\d+)\.(\d+)\.(\d+)'
+RE_SEMVER = r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'
 
 
 def clean_data(packages, dependencies):
