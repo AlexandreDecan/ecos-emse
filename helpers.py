@@ -15,7 +15,7 @@ ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
 DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
 
 # RE_SEMVER = r'(\d+)\.(\d+)(?:\.(\d+))?'
-RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>.+)$'
+RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
 
 RE_SOFT_CONSTRAINT = r'http|\^|~|>|<|\*|\.x'
 RE_LOWER_CONSTRAINT = r'\^|~|>|\.\*|\.x'
