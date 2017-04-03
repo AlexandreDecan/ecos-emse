@@ -98,8 +98,8 @@ def create_graph(packages, dependencies):
     
     graph.vs['in'] = graph.indegree()
     graph.vs['out'] = graph.outdegree()
-    graph.vs['tr-in'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)
-    graph.vs['tr-out'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)
+    graph.vs['tr-in'] = [n - 1 for n in graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)]
+    graph.vs['tr-out'] = [n - 1 for n in graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)]
     
     return graph
 
