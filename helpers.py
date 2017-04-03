@@ -98,8 +98,8 @@ def create_graph(packages, dependencies):
     
     graph.vs['in'] = graph.indegree()
     graph.vs['out'] = graph.outdegree()
-    graph.vs['tr-in'] = [n - 1 for n in graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)]
-    graph.vs['tr-out'] = [n - 1 for n in graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)]
+    graph.vs['tr-in'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)
+    graph.vs['tr-out'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)
     
     return graph
 
@@ -232,12 +232,9 @@ def cliffsDelta(lst1, lst2):
 def compare_distributions(a, b):
     """
     Test for a < b using Mann Whitney U and Cliff's delta. 
-    Return score, p-value, Cliff's delta, label.
+    Return score, p-value, 
     """
-    score, pvalue = scipy.stats.mannwhitneyu(a, b, alternative='less')
-    d, label = cliffsDelta(a, b)
-    return score, pvalue, d, label
-    
+
 
 if __name__ == '__main__':
     for ecosystem in ECOSYSTEMS:
