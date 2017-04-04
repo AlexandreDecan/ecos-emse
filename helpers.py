@@ -1,4 +1,5 @@
 import collections
+import copy 
 import pathlib
 
 import scipy.stats
@@ -11,6 +12,7 @@ CURRENT_PATH = pathlib.Path(__file__).absolute().parent
 
 DATA_PATH = CURRENT_PATH / 'data'
 GRAPH_PATH = CURRENT_PATH / 'graphs'
+FIGURE_PATH = CURRENT_PATH / 'figures'
 
 ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
 DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
@@ -232,10 +234,20 @@ def cliffsDelta(lst1, lst2):
 def compare_distributions(a, b):
     """
     Test for a < b using Mann Whitney U and Cliff's delta. 
-    Return score, p-value, 
+    Return score, p-value, Cliff's delta, label.
     """
+    score, pvalue = scipy.stats.mannwhitneyu(a, b, alternative='less')
+    d, label = cliffsDelta(a, b)
+    return score, pvalue, d, label
+    
 
-
+def savefig(fig, name):
+    fig.savefig(
+        (FIGURE_PATH / '{}.pdf'.format(name)).as_posix(),
+        bbox_inches='tight'
+    )
+    
+    
 if __name__ == '__main__':
     for ecosystem in ECOSYSTEMS:
         print(ecosystem)
