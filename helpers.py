@@ -83,12 +83,12 @@ def create_graph(packages, dependencies):
     """
     Create and enrich a dependency graph.
     
-    The enrichment adds 'time', 'version', 'in', 'out', 'tr-in', 'tr-out' to the nodes, and 'constraint' to the edges.
+    The enrichment adds 'version', 'in', 'out', 'tr-in', 'tr-out' to the nodes, and 'constraint' to the edges.
     """
     graph = igraph.Graph(directed=True)
     
     graph.add_vertices(str(v) for v in packages['package'])
-    graph.vs['time'] = [v for v in packages['time']]
+    #graph.vs['time'] = [v for v in packages['time']]
     graph.vs['version'] = [v for v in packages['version']]
     
     graph.add_edges(
@@ -96,10 +96,10 @@ def create_graph(packages, dependencies):
     )
     graph.es['constraint'] = [v for v in dependencies['constraint']]
     
-    graph.vs['in'] = graph.indegree()
-    graph.vs['out'] = graph.outdegree()
-    graph.vs['tr-in'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)
-    graph.vs['tr-out'] = graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)
+    graph.vs['in'] = [n - 1 for n in graph.neighborhood_size(order=1, mode=igraph.IN)]
+    graph.vs['out'] = [n - 1 for n in graph.neighborhood_size(order=1, mode=igraph.OUT)]
+    graph.vs['tr-in'] = [n - 1 for n in graph.neighborhood_size(order=len(graph.vs), mode=igraph.IN)]
+    graph.vs['tr-out'] = [n - 1 for n in graph.neighborhood_size(order=len(graph.vs), mode=igraph.OUT)]
     
     return graph
 
