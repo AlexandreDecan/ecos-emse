@@ -1,3 +1,2 @@
 *.ipynb_checkpoints
-figures/*.pdf
 __pycache__/
