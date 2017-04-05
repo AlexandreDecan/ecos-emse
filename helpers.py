@@ -23,7 +23,7 @@ LIBRARIES_IO_KIND = {
 }
 
 ECOSYSTEMS = ['cpan', 'cran', 'npm', 'nuget', 'packagist', 'rubygems']
-DATE_RANGE = pandas.date_range('2011-01-01', '2017-04-01', freq='3MS')
+DATE_RANGE = pandas.date_range('2012-01-01', '2017-04-01', freq='3MS')
 
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
 
