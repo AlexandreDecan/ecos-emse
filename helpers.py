@@ -11,11 +11,14 @@ import statsmodels.api as sm
 CURRENT_PATH = pathlib.Path(__file__).absolute().parent
 
 DATA_PATH = CURRENT_PATH / 'data'
+LIBRARIES_IO_PATH = CURRENT_PATH / 'libraries.io'
 GRAPH_PATH = CURRENT_PATH / 'graphs'
 FIGURE_PATH = CURRENT_PATH / 'figures'
 
-ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
-DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
+#ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
+#DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
+ECOSYSTEMS = ['cran', 'npm', 'packagist', 'rubygems']
+DATE_RANGE = pandas.date_range('2011-01-01', '2017-04-01', freq='3MS')
 
 # RE_SEMVER = r'(\d+)\.(\d+)(?:\.(\d+))?'
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
@@ -25,12 +28,75 @@ RE_LOWER_CONSTRAINT = r'\^|~|>|\.\*|\.x'
 RE_UPPER_CONSTRAINT = r'\^|~|<|\.\*|\.x'
 
 
-def clean_data(packages, dependencies):
+def convert_from_libraries_io(source, target=None):
+    """
+    Convert data from libraries_io format to our format.
+    """
+    target = source if target is None else target
+    
+    pkg_filepath = LIBRARIES_IO_PATH / source / '{}-versions.csv'.format(source)
+    deps_filepath = LIBRARIES_IO_PATH / source / '{}-dependencies.csv'.format(source)
+
+    try:
+        (DATA_PATH / target).mkdir()
+    except FileExistsError as e:
+        pass
+
+    (
+        pandas.read_csv(pkg_filepath.as_posix())
+        .rename(columns={
+            'Project name': 'package',
+            'Version number': 'version',
+            'Version date': 'time',
+        })
+        .to_csv(
+            (DATA_PATH / target / 'packages.csv.gz').as_posix(),
+            columns=['package', 'version', 'time'],
+            index=False,
+            compression='gzip'
+        )
+    )
+    
+    (
+        pandas.read_csv(deps_filepath.as_posix())
+        .rename(columns={
+            'Project name': 'package',
+            'Version number': 'version',
+            'Dependency name': 'dependency',
+            'Dependency requirements': 'constraint',
+            'Dependency kind': 'kind',
+        })
+        .query('kind == "runtime"')
+        .to_csv(
+            (DATA_PATH / target / 'dependencies.csv.gz').as_posix(),
+            columns=['package', 'version', 'dependency', 'constraint'],
+            index=False,
+            compression='gzip'
+        )
+    )
+
+
+def clean_data(packages, dependencies, ecosystem=None):
     """
     Remove invalid or unknown packages and dependencies.
     """
+    # For npm, remove packages starting with:
+    # - all-packages-
+    # - cool-
+    # - neat-
+    # - wowdude-
+    # This represents around 245 packages with have a very high number
+    # of dependencies, and are just "fun packages", as explained here:
+    # https://libraries.io/npm/wowdude-119
+    if ecosystem == 'npm':
+        filtered = ('all-packages-', 'cool-', 'neat-', '-wowdue-',)
+        packages = packages[~packages['package'].str.startswith(filtered)]
+    
     # Filter releases with invalide date
-    packages = packages[packages['time'] >= pandas.to_datetime('1980-01-01')]
+    packages = (
+        packages[packages['time'] >= pandas.to_datetime('1980-01-01')]
+        .dropna()
+    )
 
     # Filter unknown package/version
     dependencies = dependencies.merge(
@@ -53,13 +119,15 @@ def load_data(ecosystem):
         (DATA_PATH / ecosystem / 'packages.csv.gz').as_posix(),
         usecols=['package', 'version', 'time'],
         parse_dates=['time'],
+        infer_datetime_format=True,
     )
+    
     dependencies = pandas.read_csv(
         (DATA_PATH / ecosystem / 'dependencies.csv.gz').as_posix(),
         usecols=['package', 'version', 'dependency', 'constraint'],
     )
     
-    return clean_data(packages, dependencies)
+    return clean_data(packages, dependencies, ecosystem)
 
 
 def create_snapshot(packages, dependencies, date):
