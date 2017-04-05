@@ -18,7 +18,7 @@ DATE_RANGE = pandas.date_range('2011-01-01', '2017-04-01', freq='3MS')
 
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
 
-RE_CONSTRAINT = collections.defaultdict(lambda d: r'^(?P<op>={0,2}|<|>|<=|>=|~|\^) ?(?P<version>[^,;\*xX ]+)$')
+RE_CONSTRAINT = collections.defaultdict(lambda d: r'^(?P<op>={0,2}|<|>|<=|>=|~|~>|\^|s) ?(?P<version>[^=<>~\^,;\*xX ]+)$')
 RE_SOFT_CONSTRAINT = collections.defaultdict(lambda d: r'http|\^|~|>|<|\*|\.x')
 RE_LOWER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|>|\.\*|\.x')
 RE_UPPER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|<|\.\*|\.x')
