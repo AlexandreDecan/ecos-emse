@@ -1,12 +1,10 @@
 import collections
-import copy 
 import pathlib
 
-import scipy.stats
 import igraph
 import pandas
+import scipy.stats
 import statsmodels.api as sm
-
 
 CURRENT_PATH = pathlib.Path(__file__).absolute().parent
 
@@ -15,17 +13,15 @@ LIBRARIES_IO_PATH = CURRENT_PATH / 'libraries.io'
 GRAPH_PATH = CURRENT_PATH / 'graphs'
 FIGURE_PATH = CURRENT_PATH / 'figures'
 
-#ECOSYSTEMS = sorted([p.parts[-1] for p in DATA_PATH.iterdir() if p.is_dir()])
-#DATE_RANGE = pandas.date_range('2011-01-01', '2016-06-01', freq='MS')
 ECOSYSTEMS = ['cran', 'npm', 'packagist', 'rubygems']
 DATE_RANGE = pandas.date_range('2011-01-01', '2017-04-01', freq='3MS')
 
-# RE_SEMVER = r'(\d+)\.(\d+)(?:\.(\d+))?'
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
 
-RE_SOFT_CONSTRAINT = r'http|\^|~|>|<|\*|\.x'
-RE_LOWER_CONSTRAINT = r'\^|~|>|\.\*|\.x'
-RE_UPPER_CONSTRAINT = r'\^|~|<|\.\*|\.x'
+RE_CONSTRAINT = collections.defaultdict(lambda d: r'^(?P<op>={0,2}|<|>|<=|>=|~|\^) ?(?P<version>[^,;\*xX ]+)$')
+RE_SOFT_CONSTRAINT = collections.defaultdict(lambda d: r'http|\^|~|>|<|\*|\.x')
+RE_LOWER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|>|\.\*|\.x')
+RE_UPPER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|<|\.\*|\.x')
 
 
 def convert_from_libraries_io(source, target=None):
@@ -80,6 +76,12 @@ def clean_data(packages, dependencies, ecosystem=None):
     """
     Remove invalid or unknown packages and dependencies.
     """
+    # Filter releases with invalide date
+    packages = (
+        packages[packages['time'] >= pandas.to_datetime('1980-01-01')]
+        .dropna()
+    )
+
     # For npm, remove packages starting with:
     # - all-packages-
     # - cool-
@@ -91,12 +93,6 @@ def clean_data(packages, dependencies, ecosystem=None):
     if ecosystem == 'npm':
         filtered = ('all-packages-', 'cool-', 'neat-', '-wowdue-',)
         packages = packages[~packages['package'].str.startswith(filtered)]
-    
-    # Filter releases with invalide date
-    packages = (
-        packages[packages['time'] >= pandas.to_datetime('1980-01-01')]
-        .dropna()
-    )
 
     # Filter unknown package/version
     dependencies = dependencies.merge(
@@ -215,7 +211,10 @@ def evolution_regression(df, xlog=False, ylog=False, return_raw=False):
     X = sm.add_constant(X, prepend=False)
     
     for column in df.columns:
-        y = df[column] if not ylog else pandas.np.log10(df[column])
+        if not ylog:
+            y = df[column]
+        else:
+            y = pandas.np.log10(df[column].apply(lambda v: max(v, 10e-5)))
         y = y.reset_index(drop=True)
         
         result = sm.OLS(y, X).fit()
