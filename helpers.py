@@ -9,29 +9,38 @@ import statsmodels.api as sm
 CURRENT_PATH = pathlib.Path(__file__).absolute().parent
 
 DATA_PATH = CURRENT_PATH / 'data'
-LIBRARIES_IO_PATH = CURRENT_PATH / 'libraries.io'
 GRAPH_PATH = CURRENT_PATH / 'graphs'
 FIGURE_PATH = CURRENT_PATH / 'figures'
 
-ECOSYSTEMS = ['cran', 'npm', 'packagist', 'rubygems']
+LIBRARIES_IO_PATH = CURRENT_PATH / 'libraries.io'
+LIBRARIES_IO_KIND = {
+    'npm': ['runtime'],  # Development Optional runtime
+    'rubygems': ['runtime'],  # Development runtime
+    'cran': ['imports', 'depends'],  # depends enhances imports suggests
+    'packagist': ['runtime'],  # Development runtime
+    'cpan': ['runtime'],  # build configure develop runtime test x_benchmarks x_examples
+    'nuget': ['runtime'],  # runtime
+}
+
+ECOSYSTEMS = ['cpan', 'cran', 'npm', 'nuget', 'packagist', 'rubygems']
 DATE_RANGE = pandas.date_range('2011-01-01', '2017-04-01', freq='3MS')
 
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
 
-RE_CONSTRAINT = collections.defaultdict(lambda d: r'^(?P<op>={0,2}|<|>|<=|>=|~|~>|\^|s) ?(?P<version>[^=<>~\^,;\*xX ]+)$')
+RE_CONSTRAINT = collections.defaultdict(lambda d: r'^(?P<op>={0,2}|<|>|<=|>=|~|~>|~=|\^)? ?(?P<version>[^=<>~\^,;\*xX ]+)$')
 RE_SOFT_CONSTRAINT = collections.defaultdict(lambda d: r'http|\^|~|>|<|\*|\.x')
 RE_LOWER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|>|\.\*|\.x')
 RE_UPPER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|<|\.\*|\.x')
 
 
-def convert_from_libraries_io(source, target=None):
+def convert_from_libraries_io(ecosystem, target=None):
     """
     Convert data from libraries_io format to our format.
     """
-    target = source if target is None else target
+    target = ecosystem if target is None else target
     
-    pkg_filepath = LIBRARIES_IO_PATH / source / '{}-versions.csv'.format(source)
-    deps_filepath = LIBRARIES_IO_PATH / source / '{}-dependencies.csv'.format(source)
+    pkg_filepath = LIBRARIES_IO_PATH / ecosystem / '{}-versions.csv'.format(ecosystem)
+    deps_filepath = LIBRARIES_IO_PATH / ecosystem / '{}-dependencies.csv'.format(ecosystem)
 
     try:
         (DATA_PATH / target).mkdir()
@@ -62,7 +71,7 @@ def convert_from_libraries_io(source, target=None):
             'Dependency requirements': 'constraint',
             'Dependency kind': 'kind',
         })
-        .query('kind == "runtime"')
+        .query(' or '.join(['kind == "{}"'.format(kind) for kind in LIBRARIES_IO_KIND[ecosystem]]))
         .to_csv(
             (DATA_PATH / target / 'dependencies.csv.gz').as_posix(),
             columns=['package', 'version', 'dependency', 'constraint'],
