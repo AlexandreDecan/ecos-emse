@@ -20,22 +20,18 @@ LIBRARIES_IO_KIND = {
     'packagist': ['runtime'],  # Development runtime
     'cpan': ['runtime'],  # build configure develop runtime test x_benchmarks x_examples
     'nuget': ['runtime'],  # runtime
+    'cargo': ['normal', 'runtime'],  # build dev normal runtime
 }
 
-ECOSYSTEMS = ['cpan', 'cran', 'npm', 'nuget', 'packagist', 'rubygems']
-DATE_RANGE = pandas.date_range('2012-01-01', '2017-04-01', freq='3MS')
+ECOSYSTEMS = ['cargo', 'cpan', 'cran', 'npm', 'nuget', 'packagist', 'rubygems']
+DATE_RANGE = pandas.date_range('2012-01-01', '2017-01-01', freq='MS')
 
 RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
-
-RE_CONSTRAINT = collections.defaultdict(lambda d: r'^(?P<op>={0,2}|<|>|<=|>=|~|~>|~=|\^)? ?(?P<version>[^=<>~\^,;\*xX ]+)$')
-RE_SOFT_CONSTRAINT = collections.defaultdict(lambda d: r'http|\^|~|>|<|\*|\.x')
-RE_LOWER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|>|\.\*|\.x')
-RE_UPPER_CONSTRAINT = collections.defaultdict(lambda d: r'\^|~|<|\.\*|\.x')
 
 
 def convert_from_libraries_io(ecosystem, target=None):
     """
-    Convert data from libraries_io format to our format.
+    Convert data from libraries.io format to our format.
     """
     target = ecosystem if target is None else target
     
@@ -125,11 +121,13 @@ def load_data(ecosystem):
         usecols=['package', 'version', 'time'],
         parse_dates=['time'],
         infer_datetime_format=True,
+        engine='c',
     )
     
     dependencies = pandas.read_csv(
         (DATA_PATH / ecosystem / 'dependencies.csv.gz').as_posix(),
         usecols=['package', 'version', 'dependency', 'constraint'],
+        engine='c',
     )
     
     return clean_data(packages, dependencies, ecosystem)
