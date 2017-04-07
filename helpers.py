@@ -26,7 +26,7 @@ LIBRARIES_IO_KIND = {
 ECOSYSTEMS = ['cargo', 'cpan', 'cran', 'npm', 'nuget', 'packagist', 'rubygems']
 DATE_RANGE = pandas.date_range('2012-01-01', '2017-01-01', freq='MS')
 
-RE_SEMVER = r'^(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
+RE_SEMVER = r'^(?:v|V)?(?P<v_major>\d+)\.(?P<v_minor>\d+)\.(?P<v_patch>\d+)(?P<v_misc>.*)$'
 
 
 def convert_from_libraries_io(ecosystem, target=None):
