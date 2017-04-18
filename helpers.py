@@ -161,7 +161,7 @@ def create_graph(packages, dependencies):
     graph = igraph.Graph(directed=True)
     
     graph.add_vertices(str(v) for v in packages['package'])
-    #graph.vs['time'] = [v for v in packages['time']]
+    # graph.vs['time'] = [v for v in packages['time']]
     graph.vs['version'] = [v for v in packages['version']]
     
     graph.add_edges(
@@ -208,20 +208,20 @@ def evolution_regression(df, xlog=False, ylog=False, return_raw=False):
     Return R² value for df.index] ~ a.df[x] + b for all column x in given dataframe.
     
     If 'return_raw' is True, return the resulting OLS object instead of its R².
-    The results are returned through a dict which associates to each column  the result of the regression.
+    The results are returned through a dict which associates to each column the result of the regression.
     """
     results = collections.OrderedDict()
     
-    time = pandas.Series(df.index)
-    X = 1 + (time - time.min()).dt.days
-    X = pandas.np.log10(X) if xlog else X
-    X = sm.add_constant(X, prepend=False)
-    
     for column in df.columns:
+        time = pandas.Series(df[column].dropna().index)
+        X = 1 + (time - time.min()).dt.days
+        X = pandas.np.log10(X) if xlog else X
+        X = sm.add_constant(X, prepend=False)
+        
         if not ylog:
-            y = df[column]
+            y = df[column].dropna()
         else:
-            y = pandas.np.log10(df[column].apply(lambda v: max(v, 10e-5)))
+            y = pandas.np.log10(df[column].dropna().apply(lambda v: max(v, 10e-5)))
         y = y.reset_index(drop=True)
         
         result = sm.OLS(y, X).fit()
