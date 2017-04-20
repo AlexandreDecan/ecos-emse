@@ -236,6 +236,7 @@ def evolution_linlog_regressions(df, return_raw=False):
     Return the results of multiple regressions (lin/log).
     """
     data = pandas.DataFrame(columns=df.columns)
+    df = df.sort_index()
     
     data.loc['lin-lin', :] = evolution_regression(df, return_raw=return_raw)
     data.loc['lin-log', :] = evolution_regression(df, ylog=True, return_raw=return_raw)
@@ -320,6 +321,14 @@ def savefig(fig, name):
         (FIGURE_PATH / '{}.pdf'.format(name)).as_posix(),
         bbox_inches='tight'
     )
+    
+    
+def x_index(values):
+    for i, d in enumerate(sorted(values, reverse=True)):
+        if (i + 1) >= d:
+            #return max(d, 10e-5)
+            return d
+    return 0
     
     
 if __name__ == '__main__':
