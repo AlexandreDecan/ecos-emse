@@ -316,11 +316,22 @@ def compare_distributions(a, b):
     return score, pvalue, d, label
     
 
-def savefig(fig, name):
+def savefig(fig, name, strip_title=True):
+    if strip_title:
+        p_title = fig.suptitle('').get_text()
+        if len(fix.axes) == 1:
+          a_title = fig.axes[0].get_title()
+          fig.axes[0].set_title('')
+
     fig.savefig(
         (FIGURE_PATH / '{}.pdf'.format(name)).as_posix(),
         bbox_inches='tight'
     )
+
+    if strip_title:
+        fig.suptitle(p_title)
+        if len(fig.axes) == 1:
+            fig.axes[0].set_title(a_title)
     
     
 def x_index(values):
