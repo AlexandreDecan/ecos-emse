@@ -58,7 +58,7 @@ def convert_from_libraries_io(ecosystem, target=None):
         )
     )
     
-    (
+    deps = (
         pandas.read_csv(deps_filepath.as_posix())
         .rename(columns={
             'Project name': 'package',
@@ -67,14 +67,24 @@ def convert_from_libraries_io(ecosystem, target=None):
             'Dependency requirements': 'constraint',
             'Dependency kind': 'kind',
         })
-        .query(' or '.join(['kind == "{}"'.format(kind) for kind in LIBRARIES_IO_KIND[ecosystem]]))
-        .to_csv(
+    )
+    d_before = len(deps)
+    deps = deps.query(' or '.join(['kind == "{}"'.format(kind) for kind in LIBRARIES_IO_KIND[ecosystem]]))
+    d_after = len(deps)
+    
+    print('{}: from {} deps to {} deps ({}%)'.format(
+        ecosystem,
+        d_before,
+        d_after,
+        d_after / d_before * 100
+    ))
+    
+    deps.to_csv(
             (DATA_PATH / target / 'dependencies.csv.gz').as_posix(),
             columns=['package', 'version', 'dependency', 'constraint'],
             index=False,
             compression='gzip'
         )
-    )
 
 
 def clean_data(packages, dependencies, ecosystem=None):
@@ -106,8 +116,9 @@ def clean_data(packages, dependencies, ecosystem=None):
     )
     
     # Filter unknown dependencies
+    print('#deps for {} before cleaning: {}'.format(ecosystem, len(dependencies)))
     dependencies = dependencies[dependencies['dependency'].isin(packages['package'])]
-    
+    print('after: {}'.format(len(dependencies)))
     return packages, dependencies
     
     
