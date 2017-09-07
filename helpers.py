@@ -116,9 +116,17 @@ def clean_data(packages, dependencies, ecosystem=None):
     )
     
     # Filter unknown dependencies
-    print('#deps for {} before cleaning: {}'.format(ecosystem, len(dependencies)))
+    d_before = len(dependencies)
     dependencies = dependencies[dependencies['dependency'].isin(packages['package'])]
-    print('after: {}'.format(len(dependencies)))
+    d_after = len(dependencies)
+    
+    print('{}: from {} deps to {} deps ({}%)'.format(
+        ecosystem,
+        d_before,
+        d_after,
+        d_after / d_before * 100
+    ))
+
     return packages, dependencies
     
     
