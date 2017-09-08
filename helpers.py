@@ -72,12 +72,11 @@ def convert_from_libraries_io(ecosystem, target=None):
     deps = deps.query(' or '.join(['kind == "{}"'.format(kind) for kind in LIBRARIES_IO_KIND[ecosystem]]))
     d_after = len(deps)
     
-    print('{}: from {} deps to {} deps ({}%)'.format(
-        ecosystem,
-        d_before,
-        d_after,
-        d_after / d_before * 100
-    ))
+    # print('{}: from {} deps to {} deps'.format(
+    #     ecosystem,
+    #     d_before,
+    #     d_after,
+    # ))
     
     deps.to_csv(
             (DATA_PATH / target / 'dependencies.csv.gz').as_posix(),
@@ -120,12 +119,11 @@ def clean_data(packages, dependencies, ecosystem=None):
     dependencies = dependencies[dependencies['dependency'].isin(packages['package'])]
     d_after = len(dependencies)
     
-    print('{}: from {} deps to {} deps ({}%)'.format(
-        ecosystem,
-        d_before,
-        d_after,
-        d_after / d_before * 100
-    ))
+    # print('{}: from {} deps to {} deps'.format(
+    #     ecosystem,
+    #     d_before,
+    #     d_after,
+    # ))
 
     return packages, dependencies
     
