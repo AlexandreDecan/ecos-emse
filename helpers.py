@@ -105,7 +105,7 @@ def clean_data(packages, dependencies, ecosystem=None):
     # of dependencies, and are just "fun packages", as explained here:
     # https://libraries.io/npm/wowdude-119
     if ecosystem == 'npm':
-        filtered = ('all-packages-', 'cool-', 'neat-', '-wowdue-',)
+        filtered = ('all-packages-', 'cool-', 'neat-', 'wowdude-',)
         packages = packages[~packages['package'].str.startswith(filtered)]
 
     # Filter unknown package/version
