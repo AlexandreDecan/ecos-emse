@@ -1,2 +1,9 @@
-Data was provided by https://libraries.io and is licensed CC BY-SA 
+This is the replication package for "An Empirical Comparison of Dependency Network Evolution in Seven Software Packaging Ecosystems". 
+
+This package requires Python 3.5 and all the dependencies that are listed in requirements.txt
+The notebooks (in "notebooks" folder) should be opened and executed with Jupyter. 
+
+The notebooks require the graphs (in "graphs" folder) to be computed first. To do so, execute "helpers.py" with Python.
+The graphs are built using the data provided by https://libraries.io under CC BY-SA 
 https://creativecommons.org/licenses/by-sa/4.0/
+Those data can be found in the "data" folder. 
